@@ -1,0 +1,286 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Q4AV2PDS</title><meta name="generator" content="MATLAB 9.8"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2022-01-31"><meta name="DC.source" content="Q4AV2PDS.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">Obtendo os coeficientes do filtro FII</a></li><li><a href="#3">((4) a)</a></li><li><a href="#4">((4) b e c) mudan&ccedil;a na taxa de amostragem</a></li></ul></div><pre class="codeinput">clearvars
+close <span class="string">all</span>
+clc
+
+<span class="comment">% Abrindo o sinal de audio</span>
+FileName = <span class="string">'UnknownSound.wav'</span>;
+[x,fs] = audioread(FileName);
+
+NSamples = length(x);
+t = (0:NSamples-1)/fs;
+
+<span class="comment">% Plot do sinal e o spectrograma do sinal original</span>
+fig = figure(<span class="string">'Position'</span>,[100 100 900 600],<span class="string">'color'</span>,<span class="string">'w'</span>);
+
+<span class="comment">% Plot do sinal</span>
+ax1 = subplot(3,1,1);
+plot(t,x);
+tl = title(<span class="string">'a) Time signal'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>);
+set(ax1,<span class="string">'TickLabelInterpreter'</span>,<span class="string">'latex'</span>,<span class="string">'FontSize'</span>,13);
+
+<span class="comment">% Plot spectrogramA</span>
+<span class="comment">% pkg load signal; % % We need to uncommnet this in octave</span>
+nfft = 1024; <span class="comment">% number fft points for spectrogram (STFT)</span>
+WLength = round(.05*fs); <span class="comment">% Number of samples for each window segment used in STFT</span>
+PercentOverlap = 0.8; <span class="comment">% 80 percent overlap</span>
+
+ax2 = subplot(3,1,[2 3]);
+[Pxx,tPxx,f] = My_STFT(x,fs,WLength,PercentOverlap);
+Pxx_dB = 10*log10(Pxx);
+surf(tPxx,f/1e3,Pxx_dB,<span class="string">'edgecolor'</span>,<span class="string">'none'</span>);
+axis <span class="string">tight</span>, view(0,90)
+
+tl = title(<span class="string">'b) Signal spectrogram'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>);
+xlabel(<span class="string">'t(s)'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>);
+ylabel(<span class="string">'f(kHz)'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>);
+set(ax2,<span class="string">'TickLabelInterpreter'</span>,<span class="string">'latex'</span>,<span class="string">'FontSize'</span>,13);
+
+colorbar <span class="string">off</span>
+<span class="comment">% print('-dpng','-r300', 'RawSignal.png');</span>
+</pre><img vspace="5" hspace="5" src="Q4AV2PDS_01.png" alt=""> <h2 id="2">Obtendo os coeficientes do filtro FII</h2><h2 id="3">((4) a)</h2><pre class="codeinput">fc = 1000; <span class="comment">% fc = 1 kHz</span>
+wc = fc/(25000/2);
+M = 31;
+b = fir1(M,wc);
+
+[H,fH] = freqz(b,1,1024,fs);
+
+
+<span class="comment">% Plot do sinal de tempo e do spectrograma do sinal original</span>
+y = filter(b,1,x);
+fig = figure(<span class="string">'Position'</span>,[100 100 900 600],<span class="string">'color'</span>,<span class="string">'w'</span>);
+
+<span class="comment">% Plot do sinal de tempo</span>
+ax1 = subplot(3,1,1);
+plot(t,y);
+tl = title(<span class="string">'a) Time signal'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>);
+set(ax1,<span class="string">'TickLabelInterpreter'</span>,<span class="string">'latex'</span>,<span class="string">'FontSize'</span>,13);
+
+<span class="comment">% Plot do spectograma</span>
+
+nfft = 1024; <span class="comment">% number fft points for spectrogram (STFT)</span>
+WLength = round(.05*fs); <span class="comment">% Number of samples for each window segment used in STFT</span>
+PercentOverlap = 0.8; <span class="comment">% 80 percent overlap</span>
+
+ax2 = subplot(3,1,[2 3]);
+[Pxx,tPxx,f] = My_STFT(y,fs,WLength,PercentOverlap);
+Pxx_dB = 10*log10(Pxx);
+surf(tPxx,f/1e3,Pxx_dB,<span class="string">'edgecolor'</span>,<span class="string">'none'</span>);
+axis <span class="string">tight</span>, view(0,90)
+
+tl = title(<span class="string">'b) Signal spectrogram'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>);
+xlabel(<span class="string">'t(s)'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>);
+ylabel(<span class="string">'f(kHz)'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>);
+set(ax2,<span class="string">'TickLabelInterpreter'</span>,<span class="string">'latex'</span>,<span class="string">'FontSize'</span>,13);
+</pre><img vspace="5" hspace="5" src="Q4AV2PDS_02.png" alt=""> <h2 id="4">((4) b e c) mudan&ccedil;a na taxa de amostragem</h2><pre class="codeinput">r = 2;
+fs1 = 25000/r;
+t_dwn = t(1:r:end);
+y_dwn = decimate(x,r,M,<span class="string">'fir'</span>); <span class="comment">% uses an FIR filter of order n.</span>
+
+<span class="comment">% Plot time signal &amp; spectrogram of original signal</span>
+fig = figure(<span class="string">'Position'</span>,[100 100 900 600],<span class="string">'color'</span>,<span class="string">'w'</span>);
+
+<span class="comment">% Plot time signal</span>
+ax1 = subplot(3,1,1);
+plot(t_dwn,y_dwn);
+tl = title(<span class="string">'a) Time signal'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>);
+set(ax1,<span class="string">'TickLabelInterpreter'</span>,<span class="string">'latex'</span>,<span class="string">'FontSize'</span>,13);
+
+<span class="comment">% Plot spectrogram</span>
+<span class="comment">% pkg load signal; % % We need to uncommnet this in octave</span>
+nfft = 1024; <span class="comment">% number fft points for spectrogram (STFT)</span>
+WLength = round(.05*fs); <span class="comment">% Number of samples for each window segment used in STFT</span>
+PercentOverlap = 0.8; <span class="comment">% 80 percent overlap</span>
+
+ax2 = subplot(3,1,[2 3]);
+[Pxx,tPxx,f] = My_STFT(y_dwn,fs1,WLength,PercentOverlap);
+Pxx_dB = 10*log10(Pxx);
+surf(tPxx,f/1e3,Pxx_dB,<span class="string">'edgecolor'</span>,<span class="string">'none'</span>);
+axis <span class="string">tight</span>, view(0,90)
+
+tl = title(<span class="string">'b) Signal spectrogram'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>);
+xlabel(<span class="string">'t(s)'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>);
+ylabel(<span class="string">'f(kHz)'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>);
+set(ax2,<span class="string">'TickLabelInterpreter'</span>,<span class="string">'latex'</span>,<span class="string">'FontSize'</span>,13);
+</pre><img vspace="5" hspace="5" src="Q4AV2PDS_03.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2020a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+clearvars
+close all
+clc
+
+% Abrindo o sinal de audio
+FileName = 'UnknownSound.wav';
+[x,fs] = audioread(FileName);
+
+NSamples = length(x);
+t = (0:NSamples-1)/fs;
+
+% Plot do sinal e o spectrograma do sinal original
+fig = figure('Position',[100 100 900 600],'color','w');
+
+% Plot do sinal
+ax1 = subplot(3,1,1);
+plot(t,x);
+tl = title('a) Time signal','Interpreter','latex');
+set(ax1,'TickLabelInterpreter','latex','FontSize',13);
+
+% Plot spectrogramA
+% pkg load signal; % % We need to uncommnet this in octave
+nfft = 1024; % number fft points for spectrogram (STFT)
+WLength = round(.05*fs); % Number of samples for each window segment used in STFT 
+PercentOverlap = 0.8; % 80 percent overlap
+
+ax2 = subplot(3,1,[2 3]);
+[Pxx,tPxx,f] = My_STFT(x,fs,WLength,PercentOverlap);
+Pxx_dB = 10*log10(Pxx);
+surf(tPxx,f/1e3,Pxx_dB,'edgecolor','none');
+axis tight, view(0,90)
+
+tl = title('b) Signal spectrogram','Interpreter','latex');
+xlabel('t(s)','Interpreter','latex');
+ylabel('f(kHz)','Interpreter','latex');
+set(ax2,'TickLabelInterpreter','latex','FontSize',13);
+
+colorbar off
+% print('-dpng','-r300', 'RawSignal.png');
+
+%% Obtendo os coeficientes do filtro FII
+%% ((4) a)
+
+fc = 1000; % fc = 1 kHz
+wc = fc/(25000/2);
+M = 31;
+b = fir1(M,wc);
+
+[H,fH] = freqz(b,1,1024,fs);
+
+
+% Plot do sinal de tempo e do spectrograma do sinal original
+y = filter(b,1,x);
+fig = figure('Position',[100 100 900 600],'color','w');
+
+% Plot do sinal de tempo
+ax1 = subplot(3,1,1);
+plot(t,y);
+tl = title('a) Time signal','Interpreter','latex');
+set(ax1,'TickLabelInterpreter','latex','FontSize',13);
+
+% Plot do spectograma
+
+nfft = 1024; % number fft points for spectrogram (STFT)
+WLength = round(.05*fs); % Number of samples for each window segment used in STFT 
+PercentOverlap = 0.8; % 80 percent overlap
+
+ax2 = subplot(3,1,[2 3]);
+[Pxx,tPxx,f] = My_STFT(y,fs,WLength,PercentOverlap);
+Pxx_dB = 10*log10(Pxx);
+surf(tPxx,f/1e3,Pxx_dB,'edgecolor','none');
+axis tight, view(0,90)
+
+tl = title('b) Signal spectrogram','Interpreter','latex');
+xlabel('t(s)','Interpreter','latex');
+ylabel('f(kHz)','Interpreter','latex');
+set(ax2,'TickLabelInterpreter','latex','FontSize',13); 
+
+
+%% ((4) b e c) mudança na taxa de amostragem
+r = 2;
+fs1 = 25000/r;
+t_dwn = t(1:r:end);
+y_dwn = decimate(x,r,M,'fir'); % uses an FIR filter of order n.
+
+% Plot time signal & spectrogram of original signal
+fig = figure('Position',[100 100 900 600],'color','w');
+
+% Plot time signal
+ax1 = subplot(3,1,1);
+plot(t_dwn,y_dwn);
+tl = title('a) Time signal','Interpreter','latex');
+set(ax1,'TickLabelInterpreter','latex','FontSize',13);
+
+% Plot spectrogram
+% pkg load signal; % % We need to uncommnet this in octave
+nfft = 1024; % number fft points for spectrogram (STFT)
+WLength = round(.05*fs); % Number of samples for each window segment used in STFT 
+PercentOverlap = 0.8; % 80 percent overlap
+
+ax2 = subplot(3,1,[2 3]);
+[Pxx,tPxx,f] = My_STFT(y_dwn,fs1,WLength,PercentOverlap);
+Pxx_dB = 10*log10(Pxx);
+surf(tPxx,f/1e3,Pxx_dB,'edgecolor','none');
+axis tight, view(0,90)
+
+tl = title('b) Signal spectrogram','Interpreter','latex');
+xlabel('t(s)','Interpreter','latex');
+ylabel('f(kHz)','Interpreter','latex');
+set(ax2,'TickLabelInterpreter','latex','FontSize',13); 
+##### SOURCE END #####
+--></body></html>
